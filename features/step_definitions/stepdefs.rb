@@ -36,24 +36,32 @@ Given("Opened page") do
 
 end
 
-When("Input parameters") do
+When("Input parameters: {float}, {float}, {int}") do |cost, start_sum, period|
+  @cost = cost
+  @start_sum = start_sum
+  @period = period
+
   search_cost = @driver.find_element(:xpath, "//input[@name=\"cost\"]")
-  search_cost.send_keys("12000000")
+  search_cost.send_keys(@cost.to_s)
 
   search_start_sum_type = @driver.find_element(:xpath, "//select[@name=\"start_sum_type\"]")
   search_start_sum_type.send_keys("\ue015")
 
   search_start_sum = @driver.find_element(:xpath, "//input[@name=\"start_sum\"]")
-  search_start_sum.send_keys("20")
+  search_start_sum.send_keys(start_sum.to_s)
 
   search_calculated_start_sum = @driver.find_element(:xpath, "//form/div/div[text()=\"Первоначальный взнос\"]/following-sibling::div/div[3]")
-  expect(search_calculated_start_sum.text).to eq("(2 400 000 руб.)")
+  #expect(search_calculated_start_sum.text).to eq("(2 400 000 руб.)")
+  temp_num = search_calculated_start_sum.text.delete('руб.').delete('(').delete(')').delete(' ').to_f
+  expect(temp_num).to eq(@cost * start_sum / 100)
 
   search_element = @driver.find_element(:xpath, "//form/div/div[text()=\"Сумма кредита\"]/following-sibling::div/span[1]")
-  expect(search_element).not_to eq("9 600 000")
+  #expect(search_element.text).to eq("9 600 000")
+  @credit_sum = @cost * (100 - start_sum) / 100.0
+  expect(search_element.text.delete(' ').to_f).to eq(@credit_sum)
 
   search_period_field = @driver.find_element(:xpath, "//input[@name=\"period\"]")
-  search_period_field.send_keys("20")
+  search_period_field.send_keys(@period.to_s)
 
   search_percent_field = @driver.find_element(:xpath, "//input[@name=\"percent\"]")
   @percent = rand_percentage_rate().round(2)
@@ -76,5 +84,5 @@ Then("Check payment") do
   wait.until { @driver.find_element(:xpath, "//div[@class=\"calc-result-value result-placeholder-monthlyPayment\"]").text != "" }
 
   search_payment = @driver.find_element(:xpath, "//div[@class=\"calc-result-value result-placeholder-monthlyPayment\"]")
-  expect(search_payment.text.delete(' ').sub!(',', '.').to_f).to eq(calc_payment(9600000.0, 20*12, @percent / 1200.0).round(2))
+  expect(search_payment.text.delete(' ').sub!(',', '.').to_f).to eq(calc_payment(@credit_sum, @period*12, @percent / 1200.0).round(2))
 end
