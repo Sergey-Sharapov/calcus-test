@@ -7,40 +7,32 @@ def rand_percentage_rate()
 end
 
 def calc_payment(sum, n, i)
-  sum * i *(1 + i)**n / ((1 + i)**n - 1)
+  (sum * i * (1 + i)**n) / ((1 + i)**n - 1)
 end
 
 Given("Opened page") do
   @driver = Selenium::WebDriver.for :chrome
   @driver.get('https://calcus.ru/kalkulyator-ipoteki')
-  @driver.manage.timeouts.implicit_wait = 10
+  @driver.manage.timeouts.implicit_wait = 100
 
   search_header = @driver.find_element(:xpath, "//h1")
   expect(search_header.text).to eq("Ипотечный калькулятор")
 
   search_link1 = @driver.find_element(:xpath, "//form/div/div/a[text()=\"По стоимости недвижимости\"]")
-  expect(search_link1).not_to eq(nil)
 
   search_link2 = @driver.find_element(:xpath, "//form/div/div/a[text()=\"По сумме кредита\"]")
-  expect(search_link2).not_to eq(nil)
 
   search_element1 = @driver.find_element(:xpath, "//form/div/div[text()=\"Стоимость недвижимости\"]")
-  expect(search_element1).not_to eq(nil)
 
   search_element2 = @driver.find_element(:xpath, "//form/div/div[text()=\"Первоначальный взнос\"]")
-  expect(search_element2).not_to eq(nil)
 
   search_element3 = @driver.find_element(:xpath, "//form/div/div[text()=\"Сумма кредита\"]")
-  expect(search_element3).not_to eq(nil)
 
   search_element4 = @driver.find_element(:xpath, "//form/div/div[text()=\"Срок кредита\"]")
-  expect(search_element4).not_to eq(nil)
 
   search_element5 = @driver.find_element(:xpath, "//form/div/div[contains(text(), \"Процентная ставка\")]")
-  expect(search_element5).not_to eq(nil)
 
   search_element6 = @driver.find_element(:xpath, "//form/div/div[contains(text(), \"Тип ежемесячных платежей\")]")
-  expect(search_element6).not_to eq(nil)
 
 end
 
@@ -77,6 +69,10 @@ When("Input parameters") do
 end
 
 Then("Check payment") do
-  search_payment = @driver.find_element(:xpath, "//div[contains(text(), \"Ежемесячный платеж\")]/following-sibling::div/div")
-  expect(search_payment.text.delete(' ')).to eq(calc_payment(12000000.0, 20, @percent / 100.0).round(2).to_s)
+  wait = Selenium::WebDriver::Wait.new(:timeout => 10)
+
+  wait.until { @driver.find_element(:xpath, "//div[@class=\"calc-result-value result-placeholder-monthlyPayment\"]").text != "" }
+
+  search_payment = @driver.find_element(:xpath, "//div[@class=\"calc-result-value result-placeholder-monthlyPayment\"]")
+  expect(search_payment.text.delete(' ').sub!(',', '.').to_f).to eq(calc_payment(9600000.0, 20*12, @percent / 1200.0).round(2))
 end
