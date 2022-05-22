@@ -60,8 +60,10 @@ When("Input parameters") do
   search_percent_field.send_keys(@percent.to_s)
 
   search_payment_type1 = @driver.find_element(:xpath, "//input[@id=\"payment-type-1\"]")
+  expect(search_payment_type1.selected?).to eq(true)
 
   search_payment_type2 = @driver.find_element(:xpath, "//input[@id=\"payment-type-2\"]")
+  expect(search_payment_type2.selected?).to eq(false)
 
   search_button_calculate = @driver.find_element(:xpath, "//input[@value=\"Рассчитать\"]")
   search_button_calculate.click()
